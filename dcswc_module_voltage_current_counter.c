@@ -42,9 +42,11 @@ struct_config config={0};
 struct_current current={0};
 struct_time_keep timers={0};
 
+#include "ina228.c"
 #include "param_dcswc_module_voltage_current_counter.c"
 #include "i2c_handler_dcswc_module_voltage_current_counter.c"
 #include "interrupt_dcswc_module_voltage_current_counter.c"
+
 
 void init(void) {
 	int8 buff[32];
@@ -230,6 +232,19 @@ void main(void) {
 
 		if ( kbhit() ) {
 			getc();
+
+#if 1
+			fprintf(STREAM_FTDI,"# ina228_init(0x80) ... ");
+			ina228_init(0x40);
+			fprintf(STREAM_FTDI,"done!\r\n");
+			fprintf(STREAM_FTDI,"# ina228_read16(0x40,INA228_REG_MFG_ID)=0x%04lx\r\n",ina228_read16(0x40,INA228_REG_MFG_ID));
+#endif
+
+			fprintf(STREAM_FTDI,"# ina228_init(0x4a) ... ");
+			ina228_init(0x4a);
+			fprintf(STREAM_FTDI,"done!\r\n");
+			fprintf(STREAM_FTDI,"# ina228_read16(0x4a,INA228_REG_MFG_ID)=0x%04lx\r\n",ina228_read16(0x4a,INA228_REG_MFG_ID)); 
+
 #if 0
 			fprintf(STREAM_FTDI,"# read_dip_switch()=%u\r\n",read_dip_switch());
 			fprintf(STREAM_FTDI,"#    vin adc=%lu\r\n",adc_get(0));
