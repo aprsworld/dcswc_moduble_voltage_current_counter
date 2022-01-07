@@ -4,7 +4,7 @@
 #use delay(clock=16MHz)
 
 /* hardware I2C port is slave and is connected to DCSWC bus */
-#use i2c(stream=STREAM_SLAVE,SLAVE, I2C1, address=0x34, FORCE_HW)
+//#use i2c(stream=STREAM_SLAVE,SLAVE, I2C1, address=0x34, FORCE_HW)
 /* Linux / i2cdetect will use the CCS address >>1. So 0x34 becomes 0x1a */
 
 
@@ -56,7 +56,7 @@
 
 
 /* software I2C port is maser and is connected to two INA228A */
-#use i2c(stream=STREAM_MASTER, MASTER, SLOW, FORCE_SW, scl=I2C_SCL, sda=I2C_SDA)
+#use i2c(stream=STREAM_MASTER, MASTER, FAST, FORCE_SW, scl=I2C_SW_SCL, sda=I2C_SW_SDA)
 
 
 
@@ -66,4 +66,7 @@ Parameters are stored in EEPROM
 #define PARAM_CRC_ADDRESS  0x00
 #define PARAM_ADDRESS      PARAM_CRC_ADDRESS+2
 
+
+#define INA228_A_ADDR      0x80
+#define INA228_B_ADDR      0x9a
 

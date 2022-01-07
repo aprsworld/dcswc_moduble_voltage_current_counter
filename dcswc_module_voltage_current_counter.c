@@ -67,7 +67,7 @@ void init(void) {
 	port_b_pullups(0b00000000);
 //                   76543210
 
-	set_tris_c    (0b11110000);
+	set_tris_c    (0b11110011);
 //                   76543210
 
 
@@ -190,6 +190,19 @@ void periodic_millisecond(void) {
 
 }
 
+int8 get_ack_status(int8 address) {
+	int8 status;
+
+	i2c_start(STREAM_MASTER);
+	status = i2c_write(STREAM_MASTER,address);  // Status = 0 if got an ACK
+	i2c_stop(STREAM_MASTER);
+
+	if ( 0 == status )
+		return(TRUE);
+
+   return(FALSE);
+}
+
 
 void main(void) {
 	int8 i;
@@ -221,7 +234,7 @@ void main(void) {
 	enable_interrupts(GLOBAL);
 
 	/* enable I2C slave interrupt */
-	enable_interrupts(INT_SSP);
+//	enable_interrupts(INT_SSP);
 
 	for ( ; ; ) {
 		restart_wdt();
@@ -233,23 +246,59 @@ void main(void) {
 		if ( kbhit() ) {
 			getc();
 
-#if 1
-			fprintf(STREAM_FTDI,"# ina228_init(0x80) ... ");
-			ina228_init(0x40);
-			fprintf(STREAM_FTDI,"done!\r\n");
-			fprintf(STREAM_FTDI,"# ina228_read16(0x40,INA228_REG_MFG_ID)=0x%04lx\r\n",ina228_read16(0x40,INA228_REG_MFG_ID));
+#if 0
+		for (i=0x10 ; i<0xF0 ; i+=2) {
+			if ( get_ack_status(i) ) {
+				fprintf(STREAM_FTDI,"# testing address 0x%02x ...",i);
+				fprintf(STREAM_FTDI," got ack!\r\n");
+      		} else {
+//				fprintf(STREAM_FTDI," nothing\r\n");
+			}
+   		}
 #endif
 
-			fprintf(STREAM_FTDI,"# ina228_init(0x4a) ... ");
-			ina228_init(0x4a);
+#if 1
+			fprintf(STREAM_FTDI,"# ina228_init(0x%02x) ... ",INA228_A_ADDR);
+			ina228_init(INA228_A_ADDR);
 			fprintf(STREAM_FTDI,"done!\r\n");
-			fprintf(STREAM_FTDI,"# ina228_read16(0x4a,INA228_REG_MFG_ID)=0x%04lx\r\n",ina228_read16(0x4a,INA228_REG_MFG_ID)); 
+
+			fprintf(STREAM_FTDI,"# ina228_init(0x%02x) ... ",INA228_B_ADDR);
+			ina228_init(INA228_B_ADDR);
+			fprintf(STREAM_FTDI,"done!\r\n");
+
+
+			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_MFG_ID)=0x%04lx\r\n",
+				INA228_A_ADDR,
+				ina228_read16(INA228_A_ADDR,INA228_REG_MFG_ID)
+			);
+			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_MFG_ID)=0x%04lx\r\n",
+				INA228_A_ADDR,
+				ina228_read16(INA228_A_ADDR,INA228_REG_MFG_ID)
+			);
+
+
+			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_DIETEMP)=0x%04lx\r\n",
+				INA228_A_ADDR,
+				ina228_read16(INA228_A_ADDR,INA228_REG_DIETEMP)
+			);
+			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_DIETEMP)=0x%04lx\r\n",
+				INA228_B_ADDR,
+				ina228_read16(INA228_B_ADDR,INA228_REG_DIETEMP)
+			);
+
+			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_VBUS)=0x%08lx\r\n",
+				INA228_A_ADDR,
+				ina228_read24(INA228_A_ADDR,INA228_REG_VBUS)
+			);
+			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_VBUS)=0x%08lx\r\n",
+				INA228_B_ADDR,
+				ina228_read24(INA228_B_ADDR,INA228_REG_VBUS)
+			);
+#endif
 
 #if 0
 			fprintf(STREAM_FTDI,"# read_dip_switch()=%u\r\n",read_dip_switch());
-			fprintf(STREAM_FTDI,"#    vin adc=%lu\r\n",adc_get(0));
-			fprintf(STREAM_FTDI,"#   temp adc=%lu\r\n",adc_get(1));
-			fprintf(STREAM_FTDI,"# dip sw adc=%lu\r\n",adc_get(2));
+
 #endif
 		}
 

@@ -26,16 +26,15 @@
 int16 ina228_read16(int8 i2c_address, int8 regaddr) {
 	int16 data;
 
-	i2c_start();
+	i2c_start(STREAM_MASTER);
 	delay_us(15);
-	i2c_write(i2c_address);
-	i2c_write(regaddr);
-	i2c_start();
+	i2c_write(STREAM_MASTER,i2c_address);
+	i2c_write(STREAM_MASTER,regaddr);
+	i2c_start(STREAM_MASTER);
 	delay_us(15);
-	i2c_write(i2c_address | INA228_I2C_READ);  // read cycle
-	data=(i2c_read(1)<<8) + i2c_read(0);                                 
-	data=i2c_read(0);
-	i2c_stop();
+	i2c_write(STREAM_MASTER,i2c_address | INA228_I2C_READ);  // read cycle
+	data=make16(i2c_read(STREAM_MASTER,1),i2c_read(STREAM_MASTER,0));                                 
+	i2c_stop(STREAM_MASTER);
 
 	return data;
 }
@@ -43,28 +42,27 @@ int16 ina228_read16(int8 i2c_address, int8 regaddr) {
 int32 ina228_read24(int8 i2c_address, int8 regaddr) {
 	int32 data;
 
-	i2c_start(STREAM_SLAVE);
+	i2c_start(STREAM_MASTER);
 	delay_us(15);
-	i2c_write(STREAM_SLAVE,i2c_address);
-	i2c_write(STREAM_SLAVE,regaddr);
-	i2c_start(STREAM_SLAVE);
+	i2c_write(STREAM_MASTER,i2c_address);
+	i2c_write(STREAM_MASTER,regaddr);
+	i2c_start(STREAM_MASTER);
 	delay_us(15);
-	i2c_write(STREAM_SLAVE,i2c_address | INA228_I2C_READ);  // read cycle
-	data=(i2c_read(STREAM_SLAVE,1)<<16) + (i2c_read(STREAM_SLAVE,1)<<8) + i2c_read(STREAM_SLAVE,0);                                 
-	data=i2c_read(STREAM_SLAVE,0);
-	i2c_stop(STREAM_SLAVE);
+	i2c_write(STREAM_MASTER,i2c_address | INA228_I2C_READ);  // read cycle
+	data=make32(0,i2c_read(STREAM_MASTER,1),i2c_read(STREAM_MASTER,1),i2c_read(STREAM_MASTER,0));
+	i2c_stop(STREAM_MASTER);
 
 	return data;
 }
 
 void ina228_write16(int8 i2c_address, int8 regaddr, int16 value) {
-	i2c_start(STREAM_SLAVE);
+	i2c_start(STREAM_MASTER);
 	delay_us(15);                                                 
-	i2c_write(STREAM_SLAVE,i2c_address); // write cycle                       
-	i2c_write(STREAM_SLAVE,regaddr);  // write cycle         
-	i2c_write(STREAM_SLAVE,make8(value,1));
-	i2c_write(STREAM_SLAVE,make8(value,0));
-	i2c_stop(STREAM_SLAVE);
+	i2c_write(STREAM_MASTER,i2c_address); // write cycle                       
+	i2c_write(STREAM_MASTER,regaddr);  // write cycle         
+	i2c_write(STREAM_MASTER,make8(value,1));
+	i2c_write(STREAM_MASTER,make8(value,0));
+	i2c_stop(STREAM_MASTER);
 }
 
 void ina228_init(int8 i2c_address) {
