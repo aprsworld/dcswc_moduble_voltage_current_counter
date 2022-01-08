@@ -75,7 +75,8 @@ void init(void) {
 }
 
 int8 read_dip_switch(void) {
-	return input(PIC_ADDR_MSB)<<1 | input(PIC_ADDR_LSB);
+	/* nomenclature is backwards on netlist. We actually want LSB on top */
+	return ( ! input(PIC_ADDR_LSB)<<1 ) | ( ! input(PIC_ADDR_MSB) );
 }
 
 void action_now_ina(void) {
@@ -196,6 +197,9 @@ void main(void) {
 			fprintf(STREAM_FTDI,"# current.count_seconds_long=%lu\r\n",
 				current.count_seconds_long
 			);
+
+			fprintf(STREAM_FTDI,"# input(PIC_ADDR_MSB)=%u\r\n",input(PIC_ADDR_MSB));
+			fprintf(STREAM_FTDI,"# input(PIC_ADDR_LSB)=%u\r\n",input(PIC_ADDR_LSB));
 
 		}
 

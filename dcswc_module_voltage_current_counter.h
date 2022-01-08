@@ -43,7 +43,7 @@
 #define COUNT_A              PIN_C4
 #define LED_A                PIN_C3
 #define PIC_ADDR_MSB         PIN_C6
-#define PIC_ADDR_LSB         PIN_C5
+#define PIC_ADDR_LSB         PIN_C7
 #define SER_TO_PC            PIN_B7
 
 #define INA_ALERT            PIN_A2
@@ -58,13 +58,6 @@
 /* software I2C port is maser and is connected to two INA228A */
 #use i2c(stream=STREAM_MASTER, MASTER, FAST, FORCE_SW, scl=I2C_SW_SCL, sda=I2C_SW_SDA)
 
-
-
-/* 
-Parameters are stored in EEPROM
-*/
-#define PARAM_CRC_ADDRESS  0x00
-#define PARAM_ADDRESS      PARAM_CRC_ADDRESS+2
 
 
 #define INA228_A_ADDR      0x80
