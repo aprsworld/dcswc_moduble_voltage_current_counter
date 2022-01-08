@@ -1,42 +1,28 @@
-#define I2C_REG_VOLTAGE_INPUT_NOW             0
-#define I2C_REG_VOLTAGE_INPUT_AVG             1
-#define I2C_REG_TEMPERATURE_BOARD_NOW         2
-#define I2C_REG_TEMPERATURE_BOARD_AVG         3
-#define I2C_REG_SWITCH_OVERRIDE_A             4
-#define I2C_REG_SWITCH_OVERRIDE_B             5
-#define I2C_REG_LED_A                         6
-#define I2C_REG_LED_B                         7
-#define I2C_REG_SEQUENCE_NUMBER               8
-#define I2C_REG_TIME_INTERVAL_MILLISECONDS    9
-#define I2C_REG_TIME_UPTIME_MINUTES           10
-#define I2C_REG_TIME_WATCHDOG_READ_SECONDS    11
-#define I2C_REG_TIME_WATCHDOG_WRITE_SECONDS   12
-#define I2C_REG_DEFAULT_PARAMS_WRITTEN        13
-#define I2C_REG_COMMAND_OFF                   14
-#define I2C_REG_POWER_OFF_FLAGS               15
+/* 32 bit INA228 bus and shunt voltages */
+#define I2C_REG_VBUS_A_MSW                    0
+#define I2C_REG_VBUS_A_LSW                    1
+#define I2C_REG_VSHUNT_A_MSW                  2
+#define I2C_REG_VSHUNT_A_LSW                  3
 
+#define I2C_REG_VBUS_B_MSW                    4
+#define I2C_REG_VBUS_B_LSW                    5
+#define I2C_REG_VSHUNT_B_MSW                  6
+#define I2C_REG_VSHUNT_B_LSW                  7
 
+/* 16 bit count of last (not current) second */
+#define I2C_REG_COUNT_A_LAST_SECOND           8
+#define I2C_REG_COUNT_B_LAST_SECOND           9
 
-#define I2C_REG_CONFIG_SERIAL_PREFIX                32
-#define I2C_REG_CONFIG_SERIAL_NUMBER                33
-#define I2C_REG_CONFIG_HARDWARE_MODEL               34
-#define I2C_REG_CONFIG_HARDWARE_VERSION             35
-#define I2C_REG_CONFIG_SOFTWARE_MODEL               36
-#define I2C_REG_CONFIG_SOFTWARE_VERSION             37
-#define I2C_REG_CONFIG_SOFTWARE_YEAR                38
-#define I2C_REG_CONFIG_SOFTWARE_MONTH               39
-#define I2C_REG_CONFIG_SOFTWARE_DAY                 40
-#define I2C_REG_CONFIG_PARAM_WRITE                  41
-#define I2C_REG_CONFIG_TICKS_ADC                    42
-#define I2C_REG_CONFIG_STARTUP_POWER_ON_DELAY       43
-#define I2C_REG_CONFIG_COMMAND_OFF_HOLD_TIME        44
-#define I2C_REG_CONFIG_READ_WATCHDOG_OFF_THRESHOLD  45
-#define I2C_REG_CONFIG_READ_WATCHDOG_OFF_HOLD_TIME  46
-#define I2C_REG_CONFIG_WRITE_WATCHDOG_OFF_THRESHOLD 47
-#define I2C_REG_CONFIG_WRITE_WATCHDOG_OFF_HOLD_TIME 48
-#define I2C_REG_CONFIG_LVD_DISCONNECT_VOLTAGE       49
-#define I2C_REG_CONFIG_LVD_DISCONNECT_DELAY         50
-#define I2C_REG_CONFIG_LVD_RECONNECT_VOLTAGE        51
-#define I2C_REG_CONFIG_HVD_DISCONNECT_VOLTAGE       52
-#define I2C_REG_CONFIG_HVD_DISCONNECT_DELAY         53
-#define I2C_REG_CONFIG_HVD_RECONNECT_VOLTAGE        54
+/* 32 bit count since reset */
+#define I2C_REG_COUNT_A_LONG_MSW              10
+#define I2C_REG_COUNT_A_LONG_LSW              11
+#define I2C_REG_COUNT_B_LONG_MSW              12
+#define I2C_REG_COUNT_B_LONG_LSW              13
+
+/* 32 bit seconds since count reset */
+#define I2C_REG_COUNT_LONG_SECONDS_MSW        14
+#define I2C_REG_COUNT_LONG_SECONDS_LSW        15
+
+/* 16 bit INA228 die temperatures */
+#define I2C_REG_DIETEMP_A                     16
+#define I2C_REG_DIETEMP_B                     17

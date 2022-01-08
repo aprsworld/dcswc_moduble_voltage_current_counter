@@ -1,11 +1,41 @@
 #int_timer2
 void isr_timer2() {
+	static int16 ticks=0;
+	static short count_a_last=0;
+	static short count_b_last=0;
+	short count_a_now;
+	short count_b_now;
+
+	/* external input counting */
+	count_a_now=input(COUNT_A);
+	if ( 0 == count_a_now && 1 == count_a_last ) {
+		next.count_a_last_second++;
+	}
+	count_a_last=count_a_now;
+
+	count_b_now=input(COUNT_B);
+	if ( 0 == count_b_now && 1 == count_b_last ) {
+		next.count_b_last_second++;
+	}
+	count_b_last=count_b_now;
+
+
+	/* timing */
+
 	timers.now_millisecond=1;
+
+	ticks++;
+	if ( 500 == ticks ) {
+		timers.now_ina=1;
+	} else if ( 1000 == ticks ) {
+		timers.now_strobe=1;
+		ticks=0;
+	}
 }
 
 
 
-#if 0
+#if 1
 
 	/*
 .................... 	state = i2c_isr_state();

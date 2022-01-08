@@ -59,10 +59,10 @@ file_001=dcswc_module_voltage_current_counter.h
 file_002=C:\Program Files (x86)\PICC\Devices\18F14K22.h
 file_003=i2c_handler_dcswc_module_voltage_current_counter.c
 file_004=interrupt_dcswc_module_voltage_current_counter.c
-file_005=param_dcswc_module_voltage_current_counter.c
-file_006=C:\Users\James Jarvis\Desktop\planetPrecision\dcswc_module_voltage_current_counter\dcswc_module_voltage_current_counter.SYM
-file_007=C:\Users\James Jarvis\Desktop\planetPrecision\dcswc_module_voltage_current_counter\dcswc_module_voltage_current_counter.TRE
-file_008=ina228.c
+file_005=C:\Users\James Jarvis\Desktop\planetPrecision\dcswc_module_voltage_current_counter\dcswc_module_voltage_current_counter.SYM
+file_006=C:\Users\James Jarvis\Desktop\planetPrecision\dcswc_module_voltage_current_counter\dcswc_module_voltage_current_counter.TRE
+file_007=ina228.c
+file_008=registers_dcswc_module_voltage_current_counter.h
 [SUITE_INFO]
 suite_guid={BA86BF99-4C07-4CE2-A9E7-C2A337910996}
 suite_state=

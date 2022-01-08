@@ -10,48 +10,41 @@ typedef struct {
 
 
 typedef struct {
-	/* circular buffer for ADC readings */
-	int16 sequence_number;
-	int16 uptime_minutes;
-	int16 interval_milliseconds;
+	int32 vbus_a, vshunt_a;
+	int32 vbus_b, vshunt_b;
 
-	int8 factory_unlocked;
+	int16 count_a_last_second, count_b_last_second;
 
+	int32 count_a_long;
+	int32 count_b_long;
+	int32 count_seconds_long;
 
-	int8 compile_year;
-	int8 compile_month;
-	int8 compile_day;
-
-	int8 default_params_written;
+	int16 dietemp_a;
+	int16 dietemp_b;
 } struct_current;
 
 typedef struct {
 	/* action flags */
 	int1 now_millisecond;
 
-	int1 now_write_config;
-	int1 now_reset_config;
+	int1 now_ina;    // query ina registers
+	int1 now_strobe; // copy next to current
 
 	/* timers */
 	int8 led_on_a;
-
 } struct_time_keep;
 
 /* global structures */
-struct_config config={0};
 struct_current current={0};
+struct_current next={0};
 struct_time_keep timers={0};
 
 #include "ina228.c"
-#include "param_dcswc_module_voltage_current_counter.c"
 #include "i2c_handler_dcswc_module_voltage_current_counter.c"
 #include "interrupt_dcswc_module_voltage_current_counter.c"
 
 
 void init(void) {
-	int8 buff[32];
-//	setup_oscillator(OSC_16MHZ);
-
 	setup_vref(VREF_OFF);
 	setup_dac(DAC_OFF);
 	setup_adc(ADC_OFF);
@@ -71,49 +64,8 @@ void init(void) {
 //                   76543210
 
 
-//                   76543210
-
 	/* data structure initialization */
 	/* all initialized to 0 on declaration. Just do this if need non-zero */
-
-	/* get our compiled date from constant */
-	strcpy(buff,__DATE__);
-	current.compile_day =(buff[0]-'0')*10;
-	current.compile_day+=(buff[1]-'0');
-	/* determine month ... how annoying */
-	if ( 'J'==buff[3] ) {
-		if ( 'A'==buff[4] )
-			current.compile_month=1;
-		else if ( 'N'==buff[5] )
-			current.compile_month=6;
-		else
-			current.compile_month=7;
-	} else if ( 'A'==buff[3] ) {
-		if ( 'P'==buff[4] )
-			current.compile_month=4;
-		else
-			current.compile_month=8;
-	} else if ( 'M'==buff[3] ) {
-		if ( 'R'==buff[5] )
-			current.compile_month=3;
-		else
-			current.compile_month=5;
-	} else if ( 'F'==buff[3] ) {
-		current.compile_month=2;
-	} else if ( 'S'==buff[3] ) {
-		current.compile_month=9;
-	} else if ( 'O'==buff[3] ) {
-		current.compile_month=10;
-	} else if ( 'N'==buff[3] ) {
-		current.compile_month=11;
-	} else if ( 'D'==buff[3] ) {
-		current.compile_month=12;
-	} else {
-		/* error parsing, shouldn't happen */
-		current.compile_month=255;
-	}
-	current.compile_year =(buff[7]-'0')*10;
-	current.compile_year+=(buff[8]-'0');
 
 
 	/* one periodic interrupt @ 1mS. Generated from system 16 MHz clock */
@@ -124,41 +76,57 @@ void init(void) {
 }
 
 int8 read_dip_switch(void) {
-	int16 adc;
+	return input(PIC_ADDR_MSB)<<1 | input(PIC_ADDR_LSB);
+}
 
-	set_adc_channel(9);
-	delay_ms(1);
-	adc=read_adc();
+void action_now_strobe(void) {
+	output_high(TP2);
+	timers.now_strobe=0;
 
-	/* (note that table is sorted by vout reading 
-	SW3.1 (LSB) SW3.2 (MSB) VALUE ADC
-    OFF         OFF         0     1023
-	OFF         ON          2     682
-    ON          OFF         1     511
-	ON          ON          3     409
-	*/
+	disable_interrupts(GLOBAL);
+	current.vbus_a=next.vbus_a;
+	current.vshunt_a=next.vshunt_a;
+	current.dietemp_a=next.dietemp_a;	
 
-	return adc;
+	current.vbus_b=next.vbus_b;
+	current.vshunt_b=next.vshunt_b;
+	current.dietemp_b=next.dietemp_b;
 
-	if ( adc > (1023-64) )
-		return 0;
-	if ( adc > (682-64) )
-		return 2;
-	if ( adc > (511-64) )
-		return 1;
+	current.count_a_last_second=next.count_a_last_second;
 
-	return 3;
+	current.count_b_last_second=next.count_b_last_second;	
+
+	current.count_a_long += current.count_a_last_second;
+	current.count_b_long += current.count_b_last_second;
+	
+	current.count_seconds_long++;
+
+	/* reset our counters */
+	next.count_a_last_second=0;
+	next.count_b_last_second=0;
+
+	enable_interrupts(GLOBAL);
+
+	output_low(TP2);
+}
+
+void action_now_ina(void) {
+	timers.now_ina=0;
+
+	/* sample INA228 at middle of 1 second window */
+	next.vbus_a=ina228_read24(INA228_A_ADDR,INA228_REG_VBUS);
+	next.vshunt_a=ina228_read24(INA228_A_ADDR,INA228_REG_VSHUNT);
+
+	next.vbus_b=ina228_read24(INA228_B_ADDR,INA228_REG_VBUS);
+	next.vshunt_b=ina228_read24(INA228_B_ADDR,INA228_REG_VSHUNT);
+
+	next.dietemp_a=ina228_read16(INA228_A_ADDR,INA228_REG_DIETEMP);
+	next.dietemp_b=ina228_read16(INA228_B_ADDR,INA228_REG_DIETEMP);
 }
 
 
-
 void periodic_millisecond(void) {
-	static int8 uptimeticks=0;
-	static int16 ticks=0;
-
-
 	timers.now_millisecond=0;
-
 
 	/* LED control */
 	if ( 0==timers.led_on_a ) {
@@ -168,25 +136,6 @@ void periodic_millisecond(void) {
 		timers.led_on_a--;
 	}
 
-	/* some other random stuff that we don't need to do every cycle in main */
-	if ( current.interval_milliseconds < 65535 ) {
-		current.interval_milliseconds++;
-	}
-
-	/* seconds */
-	ticks++;
-	if ( 1000 == ticks ) {
-		ticks=0;
-
-		
-		/* uptime counter */
-		uptimeTicks++;
-		if ( 60 == uptimeTicks ) {
-			uptimeTicks=0;
-			if ( current.uptime_minutes < 65535 ) 
-				current.uptime_minutes++;
-		}
-	}
 
 }
 
@@ -210,14 +159,9 @@ void main(void) {
 	init();
 
 
-	/* read parameters from EEPROM and write defaults if CRC doesn't match */
-	read_param_file();
-
-	if ( config.startup_power_on_delay > 100 )
-		config.startup_power_on_delay=100;
 
 	/* flash on startup */
-	for ( i=0 ; i<config.startup_power_on_delay ; i++ ) {
+	for ( i=0 ; i<5 ; i++ ) {
 		restart_wdt();
 		output_high(LED_A);
 		delay_ms(200);
@@ -227,17 +171,29 @@ void main(void) {
 
 	delay_ms(1000);
 
-	fprintf(STREAM_FTDI,"# dcswc_module_voltage_current_counter\r\n");
+	fprintf(STREAM_FTDI,"# dcswc_module_voltage_current_counter %s\r\n",__DATE__);
+
+	delay_ms(1000);
 
 	timers.led_on_a=500;
 
 	enable_interrupts(GLOBAL);
 
 	/* enable I2C slave interrupt */
-//	enable_interrupts(INT_SSP);
+	enable_interrupts(INT_SSP);
 
 	for ( ; ; ) {
 		restart_wdt();
+
+		/* query INA228's for next */
+		if ( timers.now_ina ) {
+			action_now_ina();
+		}
+
+		/* copy next to current */
+		if ( timers.now_strobe ) {
+			action_now_strobe();
+		}
 
 		if ( timers.now_millisecond ) {
 			periodic_millisecond();
@@ -246,69 +202,38 @@ void main(void) {
 		if ( kbhit() ) {
 			getc();
 
-#if 0
-		for (i=0x10 ; i<0xF0 ; i+=2) {
-			if ( get_ack_status(i) ) {
-				fprintf(STREAM_FTDI,"# testing address 0x%02x ...",i);
-				fprintf(STREAM_FTDI," got ack!\r\n");
-      		} else {
-//				fprintf(STREAM_FTDI," nothing\r\n");
-			}
-   		}
-#endif
-
-#if 1
-			fprintf(STREAM_FTDI,"# ina228_init(0x%02x) ... ",INA228_A_ADDR);
-			ina228_init(INA228_A_ADDR);
-			fprintf(STREAM_FTDI,"done!\r\n");
-
-			fprintf(STREAM_FTDI,"# ina228_init(0x%02x) ... ",INA228_B_ADDR);
-			ina228_init(INA228_B_ADDR);
-			fprintf(STREAM_FTDI,"done!\r\n");
-
-
-			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_MFG_ID)=0x%04lx\r\n",
-				INA228_A_ADDR,
-				ina228_read16(INA228_A_ADDR,INA228_REG_MFG_ID)
-			);
-			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_MFG_ID)=0x%04lx\r\n",
-				INA228_A_ADDR,
-				ina228_read16(INA228_A_ADDR,INA228_REG_MFG_ID)
+			fprintf(STREAM_FTDI,"# DIP SWITCHES: %d\r\n",
+				read_dip_switch()
 			);
 
-
-			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_DIETEMP)=0x%04lx\r\n",
-				INA228_A_ADDR,
-				ina228_read16(INA228_A_ADDR,INA228_REG_DIETEMP)
+			fprintf(STREAM_FTDI,"# A: 0x%08lx / 0x%08lx / 0x%04lu\r\n",
+				current.vbus_a,
+				current.vshunt_a,
+				current.dietemp_a
 			);
-			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_DIETEMP)=0x%04lx\r\n",
-				INA228_B_ADDR,
-				ina228_read16(INA228_B_ADDR,INA228_REG_DIETEMP)
+			fprintf(STREAM_FTDI,"# B: 0x%08lx / 0x%08lx / 0x%04lu\r\n",
+				current.vbus_b,
+				current.vshunt_b,
+				current.dietemp_b
 			);
 
-			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_VBUS)=0x%08lx\r\n",
-				INA228_A_ADDR,
-				ina228_read24(INA228_A_ADDR,INA228_REG_VBUS)
+			fprintf(STREAM_FTDI,"# current.count_a_last_second=%lu\r\n",
+				current.count_a_last_second
 			);
-			fprintf(STREAM_FTDI,"# ina228_read16(0x%02x,INA228_REG_VBUS)=0x%08lx\r\n",
-				INA228_B_ADDR,
-				ina228_read24(INA228_B_ADDR,INA228_REG_VBUS)
+			fprintf(STREAM_FTDI,"# current.count_b_last_second=%lu\r\n",
+				current.count_b_last_second
 			);
-#endif
+			fprintf(STREAM_FTDI,"# current.count_a_long=%lu\r\n",
+				current.count_a_long
+			);
+			fprintf(STREAM_FTDI,"# current.count_b_long=%lu\r\n",
+				current.count_b_long
+			);
 
-#if 0
-			fprintf(STREAM_FTDI,"# read_dip_switch()=%u\r\n",read_dip_switch());
+			fprintf(STREAM_FTDI,"# current.count_seconds_long=%lu\r\n",
+				current.count_seconds_long
+			);
 
-#endif
-		}
-
-		if ( timers.now_write_config ) {
-			timers.now_write_config=0;
-			write_param_file();
-		}
-		if ( timers.now_reset_config ) {
-			timers.now_reset_config=0;
-			write_default_param_file();
 		}
 
 
