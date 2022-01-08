@@ -6,6 +6,7 @@ void isr_timer2() {
 	short count_a_now;
 	short count_b_now;
 
+
 	/* external input counting */
 	count_a_now=input(COUNT_A);
 	if ( 0 == count_a_now && 1 == count_a_last ) {
@@ -28,9 +29,34 @@ void isr_timer2() {
 	if ( 500 == ticks ) {
 		timers.now_ina=1;
 	} else if ( 1000 == ticks ) {
-		timers.now_strobe=1;
+//		timers.now_strobe=1;
+		output_high(TP2);
+
+		current.vbus_a=next.vbus_a;
+		current.vshunt_a=next.vshunt_a;
+		current.dietemp_a=next.dietemp_a;	
+
+		current.vbus_b=next.vbus_b;
+		current.vshunt_b=next.vshunt_b;
+		current.dietemp_b=next.dietemp_b;
+
+		current.count_a_last_second=next.count_a_last_second;
+
+		current.count_b_last_second=next.count_b_last_second;	
+
+		current.count_a_long += current.count_a_last_second;
+		current.count_b_long += current.count_b_last_second;
+	
+		current.count_seconds_long++;
+
+		/* reset our counters */
+		next.count_a_last_second=0;
+		next.count_b_last_second=0;
+
 		ticks=0;
 	}
+
+	output_low(TP2);
 }
 
 

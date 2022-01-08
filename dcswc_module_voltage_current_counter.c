@@ -28,7 +28,6 @@ typedef struct {
 	int1 now_millisecond;
 
 	int1 now_ina;    // query ina registers
-	int1 now_strobe; // copy next to current
 
 	/* timers */
 	int8 led_on_a;
@@ -77,37 +76,6 @@ void init(void) {
 
 int8 read_dip_switch(void) {
 	return input(PIC_ADDR_MSB)<<1 | input(PIC_ADDR_LSB);
-}
-
-void action_now_strobe(void) {
-	output_high(TP2);
-	timers.now_strobe=0;
-
-	disable_interrupts(GLOBAL);
-	current.vbus_a=next.vbus_a;
-	current.vshunt_a=next.vshunt_a;
-	current.dietemp_a=next.dietemp_a;	
-
-	current.vbus_b=next.vbus_b;
-	current.vshunt_b=next.vshunt_b;
-	current.dietemp_b=next.dietemp_b;
-
-	current.count_a_last_second=next.count_a_last_second;
-
-	current.count_b_last_second=next.count_b_last_second;	
-
-	current.count_a_long += current.count_a_last_second;
-	current.count_b_long += current.count_b_last_second;
-	
-	current.count_seconds_long++;
-
-	/* reset our counters */
-	next.count_a_last_second=0;
-	next.count_b_last_second=0;
-
-	enable_interrupts(GLOBAL);
-
-	output_low(TP2);
 }
 
 void action_now_ina(void) {
@@ -188,11 +156,6 @@ void main(void) {
 		/* query INA228's for next */
 		if ( timers.now_ina ) {
 			action_now_ina();
-		}
-
-		/* copy next to current */
-		if ( timers.now_strobe ) {
-			action_now_strobe();
 		}
 
 		if ( timers.now_millisecond ) {
