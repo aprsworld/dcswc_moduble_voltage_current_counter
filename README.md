@@ -1,11 +1,11 @@
 # DCSWC Module, Voltage Current Counter
 ## 2 x voltage, 2 x shunt, 2 x counter
 
-PIC18F14K22 micro controller with 2 x INA228A voltage / shunt to I2C converters
+PIC18F14K22 microcontroller with 2 x INA228A voltage / shunt to I2C converters
 
 ## I2C Interface
 
-The icro controller as a I2C slave on the DCSWC bus. It is a (software) I2C master for communicating with the INA228A converts.
+The microcontroller acts as a I2C slave on the DCSWC bus. It is a (software) I2C master for communicating with the INA228A converts.
 
 ## Hardware Notes
 
