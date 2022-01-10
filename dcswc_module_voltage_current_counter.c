@@ -42,6 +42,10 @@ struct_time_keep timers={0};
 #include "i2c_handler_dcswc_module_voltage_current_counter.c"
 #include "interrupt_dcswc_module_voltage_current_counter.c"
 
+int8 read_dip_switch(void) {
+	/* nomenclature is backwards on netlist. We actually want LSB on top */
+	return ( ! input(PIC_ADDR_LSB)<<1 ) | ( ! input(PIC_ADDR_MSB) );
+}
 
 void init(void) {
 	setup_vref(VREF_OFF);
@@ -72,12 +76,13 @@ void init(void) {
 	setup_timer_2(T2_DIV_BY_16,249,1);
 
 	enable_interrupts(INT_TIMER2);
+
+	/* set I2C slave address */
+	/* Linux / i2cdetect will use the CCS address >>1. So 0x34 becomes 0x1a */
+	i2c_slaveaddr(0x35 + read_dip_switch());
+
 }
 
-int8 read_dip_switch(void) {
-	/* nomenclature is backwards on netlist. We actually want LSB on top */
-	return ( ! input(PIC_ADDR_LSB)<<1 ) | ( ! input(PIC_ADDR_MSB) );
-}
 
 void action_now_ina(void) {
 	timers.now_ina=0;
@@ -108,6 +113,7 @@ void periodic_millisecond(void) {
 
 }
 
+/* use to see if a give address is on the I2C bus */
 int8 get_ack_status(int8 address) {
 	int8 status;
 
