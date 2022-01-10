@@ -26,3 +26,4 @@
 /* 16 bit INA228 die temperatures */
 #define I2C_REG_DIETEMP_A                     16
 #define I2C_REG_DIETEMP_B                     17
+
