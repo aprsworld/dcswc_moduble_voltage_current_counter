@@ -77,9 +77,8 @@ void init(void) {
 
 	enable_interrupts(INT_TIMER2);
 
-	/* set I2C slave address */
-	/* Linux / i2cdetect will use the CCS address >>1. So 0x34 becomes 0x1a */
-	i2c_slaveaddr(0x35 + read_dip_switch());
+	/* set I2C slave address, which is always an even number */
+	i2c_slaveaddr(0x36 + (read_dip_switch()<<1) );
 
 }
 
