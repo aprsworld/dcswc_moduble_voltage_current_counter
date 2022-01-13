@@ -29,9 +29,6 @@ void isr_timer2() {
 	if ( 500 == ticks ) {
 		timers.now_ina=1;
 	} else if ( 1000 == ticks ) {
-//		timers.now_strobe=1;
-		output_high(TP2);
-
 		current.vbus_a=next.vbus_a;
 		current.vshunt_a=next.vshunt_a;
 		current.dietemp_a=next.dietemp_a;	
@@ -55,50 +52,10 @@ void isr_timer2() {
 
 		ticks=0;
 	}
-
-	output_low(TP2);
 }
 
 
-
-#if 1
-
-	/*
-.................... 	state = i2c_isr_state();
-*
-025A:  BTFSC  FC7.5	// if data, go to 0264
-025C:  BRA    0264
-
-025E:  CLRF   x9D	// set i=0 
-
-0260:  BTFSC  FC7.2	// if read, then set high bit of i 
-0262:  BSF    x9D.7
-
-0264:  MOVF   x9D,W // increment i and put result in state
-0266:  INCF   x9D,F
-0268:  MOVWF  xC7
-
-	x9D is static variable for state
-	xC7 is returned value of state
-*/
-
-/*
-.................... 	state = i2c_isr_state();
-025A:  BTFSC  FC7.5 // bit test SSPSTAT.5, skip instruction below if DATA/!ADDRESS is indicating address
-025C:  BRA    0264  // goto 0264
-
-025E:  CLRF   x9F   // set x9F to 0
-0260:  BTFSC  FC7.2 // bit test SSPSTAT.2, skip instruction below if READ/!WRITE is indicating write
-0262:  BSF    x9F.7 // set the high bit of x9F
-
-0264:  MOVF   x9F,W	// move x9F to W register
-0266:  INCF   x9F,F // increment x9F
-0268:  MOVWF  x9A	// move W to x9A (ie move x9F to x9A)
-
-that makes 9a the value of state that is used by the program and x9F as a static state variable
-*/
-
-
+/* I2C slave interrupt */
 #byte SSPSTAT=GETENV("SFR:SSPSTAT")
 #INT_SSP
 void ssp_interrupt () {
@@ -107,17 +64,12 @@ void ssp_interrupt () {
 	int8 incoming;
 	static int16 lastValue;
 	static int8 lastMSB;
-	static int8 address;
 
-
-//	state = i2c_isr_state(STREAM_SLAVE);
-
+	static int8 address; 
 
 	/* 
 	our implementation of i2c_isr_state() that won't overflow and switch states
-
 	but it will quit counting at 127 bytes. 
-
 	If more bytes are needed, external counting variables can be used or the size of state can be made larger
 	*/
 
@@ -145,17 +97,13 @@ void ssp_interrupt () {
 	
 	/* i2c_isr_state() return an 8 bit int
 		0 - Address match received with R/W bit clear, perform i2c_read( ) to read the I2C address.
-
 		1-0x7F - Master has written data; i2c_read() will immediately return the data
-
 		0x80 - Address match received with R/W bit set; perform i2c_read( ) to read the I2C address,
 		and use i2c_write( ) to pre-load the transmit buffer for the next transaction (next I2C read
 		performed by master will read this byte).
-
 		0x81-0xFF - Transmission completed and acknowledged; respond with i2c_write() to pre-load
 		the transmit buffer for the next transition (the next I2C read performed by master will read this
 		byte).
-
 		Function:
 		Returns the state of I2C communications in I2C slave mode after an SSP interrupt. The return
 		value increments with each byte received or sent.
@@ -172,9 +120,8 @@ void ssp_interrupt () {
 			incoming = i2c_read(STREAM_SLAVE);
 		}
 
-		if ( 1 == state ) {      
-			/* first byte is address */                
-			address = incoming;
+		if ( 1 == state ) {             
+			address = incoming<<1;
 		} else if ( state >= 2 && 0x80 != state ) {
 			/* received byte is data */
 		
@@ -183,7 +130,10 @@ void ssp_interrupt () {
 				lastMSB=incoming;
 			} else if ( 3 == state ) {
 				/* 16 bit value made of previous byte and this byte */
-				write_i2c(address,make16(lastMSB,incoming));
+				write_i2c(address>>1,make16(lastMSB,incoming));
+
+				/* this write only works for a single register per I2C transaction */
+				/* this is not a BUG, but it would need to be implemented if this functionality is needed */
 			}
 		}
 	}
@@ -202,11 +152,6 @@ void ssp_interrupt () {
 			/* send LSB of 16 bit register on odd address */
 			i2c_write(STREAM_SLAVE,make8(lastValue,0));
 		}
-
 		address++;
 	}
-
-	/* reset watchdog timer */
-//	timers.read_watchdog_seconds=0;
 }
-#endif
