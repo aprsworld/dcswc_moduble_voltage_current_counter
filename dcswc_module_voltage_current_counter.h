@@ -16,7 +16,7 @@
 #fuses NOIESO
 #fuses PUT
 #fuses BROWNOUT
-#fuses WDT4096
+#fuses WDT512
 #fuses NOHFOFST
 #fuses NOMCLR
 #fuses STVREN

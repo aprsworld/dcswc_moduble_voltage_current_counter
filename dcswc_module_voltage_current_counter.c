@@ -2,14 +2,6 @@
 
 
 typedef struct {
-	int8 serial_prefix;
-	int16 serial_number;
-	int16 startup_power_on_delay;
-} struct_config;
-
-
-
-typedef struct {
 	int32 vbus_a, vshunt_a;
 	int32 vbus_b, vshunt_b;
 
@@ -28,6 +20,8 @@ typedef struct {
 	int1 now_millisecond;
 
 	int1 now_ina;    // query ina registers
+
+	int1 now_dump;   // debugging
 
 	/* timers */
 	int8 led_on_a;
@@ -53,6 +47,7 @@ void init(void) {
 	setup_adc(ADC_OFF);
 	setup_adc_ports(NO_ANALOGS);
 
+	setup_wdt(WDT_512MS);
 
 
 	set_tris_a    (0b00111111);
@@ -112,23 +107,12 @@ void periodic_millisecond(void) {
 
 }
 
-/* use to see if a give address is on the I2C bus */
-int8 get_ack_status(int8 address) {
-	int8 status;
-
-	i2c_start(STREAM_MASTER);
-	status = i2c_write(STREAM_MASTER,address);  // Status = 0 if got an ACK
-	i2c_stop(STREAM_MASTER);
-
-	if ( 0 == status )
-		return(TRUE);
-
-   return(FALSE);
-}
-
 
 void main(void) {
+	int8 restart_cause;
 	int8 i;
+
+	restart_cause=restart_cause();
 
 	init();
 
@@ -143,11 +127,19 @@ void main(void) {
 		delay_ms(200);
 	}
 
-	delay_ms(1000);
+	fprintf(STREAM_FTDI,"# dcswc_module_voltage_current_counter %s\r\n# ",__DATE__);
+	switch ( restart_cause ) {
+		case WDT_TIMEOUT:       fprintf(STREAM_FTDI,"WDT TIMEOUT"); break;
+		case MCLR_FROM_SLEEP:   fprintf(STREAM_FTDI,"MCLR FROM SLEEP"); break;
+		case MCLR_FROM_RUN:     fprintf(STREAM_FTDI,"MCLR FROM RUN"); break;
+		case NORMAL_POWER_UP:   fprintf(STREAM_FTDI,"NORMAL POWER UP"); break;
+		case BROWNOUT_RESTART:  fprintf(STREAM_FTDI,"BROWNOUT RESTART"); break;
+		case WDT_FROM_SLEEP:    fprintf(STREAM_FTDI,"WDT FROM SLEEP"); break;
+		case RESET_INSTRUCTION: fprintf(STREAM_FTDI,"RESET INSTRUCTION"); break;
+		default:                fprintf(STREAM_FTDI,"UNKNOWN!");
+	}
+	fprintf(STREAM_FTDI,"\r\n");
 
-	fprintf(STREAM_FTDI,"# dcswc_module_voltage_current_counter %s\r\n",__DATE__);
-
-	delay_ms(1000);
 
 	timers.led_on_a=500;
 
@@ -168,6 +160,19 @@ void main(void) {
 			periodic_millisecond();
 		}
 
+#if 0
+		if ( timers.now_dump ) {
+			timers.now_dump=0;
+
+			fprintf(STREAM_FTDI,"# A: 0x%08lx / 0x%08lx / 0x%04lu\r\n",
+				current.vbus_a,
+				current.vshunt_a,
+				current.dietemp_a
+			);
+		}
+#endif
+
+#if 0
 		if ( kbhit() ) {
 			getc();
 
@@ -205,8 +210,8 @@ void main(void) {
 
 			fprintf(STREAM_FTDI,"# input(PIC_ADDR_MSB)=%u\r\n",input(PIC_ADDR_MSB));
 			fprintf(STREAM_FTDI,"# input(PIC_ADDR_LSB)=%u\r\n",input(PIC_ADDR_LSB));
-
 		}
+#endif
 
 
 	}

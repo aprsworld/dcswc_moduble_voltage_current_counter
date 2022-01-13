@@ -63,6 +63,7 @@ int16 map_i2c(int8 addr) {
 		case I2C_REG_VBUS_A_LSW:
 			return (int16) lsw;
 		case I2C_REG_VSHUNT_A_MSW:
+			timers.now_dump=1;
 			lsw = make16(make8(current.vshunt_a,1),make8(current.vshunt_a,0));
 			return (int16) make16(make8(current.vshunt_a,3),make8(current.vshunt_a,2));
 		case I2C_REG_VSHUNT_A_LSW:
