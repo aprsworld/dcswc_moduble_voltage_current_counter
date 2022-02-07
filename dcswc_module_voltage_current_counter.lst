@@ -1,13 +1,13 @@
-CCS PCH C Compiler, Version 5.090, 49113               13-Jan-22 17:32
+CCS PCH C Compiler, Version 5.090, 49113               06-Feb-22 18:52
 
                Filename:   C:\Users\James Jarvis\Desktop\planetPrecision\dcswc_module_voltage_current_counter\dcswc_module_voltage_current_counter.lst
 
-               ROM used:   2506 bytes (16%)
-                           Largest free fragment is 13042
+               ROM used:   2506 bytes (15%)
+                           Largest free fragment is 13874
                RAM used:   114 (22%) at main() level
                            133 (26%) worst case
                Stack used: 4 locations (2 in main + 2 for interrupts)
-               Stack size: 30
+               Stack size: 31
 
 0000:  GOTO   0832
 *
@@ -97,11 +97,11 @@ CCS PCH C Compiler, Version 5.090, 49113               13-Jan-22 17:32
 0480:  DATA 73,0D
 0482:  DATA 0A,23
 0484:  DATA 20,00
-0486:  DATA 31,33
-0488:  DATA 2D,4A
-048A:  DATA 61,6E
-048C:  DATA 2D,32
-048E:  DATA 32,00
+0486:  DATA 36,2D
+0488:  DATA 46,65
+048A:  DATA 62,2D
+048C:  DATA 32,32
+048E:  DATA 00,00
 0490:  DATA 57,44
 0492:  DATA 54,20
 0494:  DATA 54,49
@@ -234,13 +234,26 @@ CCS PCH C Compiler, Version 5.090, 49113               13-Jan-22 17:32
 .................... 
 .................... 
 .................... 
-.................... #fuses HS
+.................... /* important FUSE notes! 
+.................... MPLAB defaults to DEBUG mode and that will override fuses.
+.................... make sure it is on "BUILD CONFIGURATION" of "RELEASE" under
+.................... "PROJECT" menu.
+.................... 
+.................... CCS setup functions can override fuses. Check .LST file
+.................... to see if anything has been overriden!
+.................... */
+.................... 
+.................... #fuses NODEBUG 
+.................... #fuses INTRC_IO
+.................... #fuses NOPCLKEN
 .................... #fuses NOPLLEN
 .................... #fuses NOFCMEN
 .................... #fuses NOIESO
-.................... #fuses PUT
 .................... #fuses BROWNOUT
-.................... #fuses WDT512
+.................... #fuses BORV30
+.................... #fuses NOPUT
+.................... #fuses WDT
+.................... #fuses WDT128     /* this can be override by setup_wdt() */
 .................... #fuses NOHFOFST
 .................... #fuses NOMCLR
 .................... #fuses STVREN
@@ -254,6 +267,8 @@ CCS PCH C Compiler, Version 5.090, 49113               13-Jan-22 17:32
 .................... #fuses NOWRTD
 .................... #fuses NOEBTR
 .................... #fuses NOEBTRB
+.................... #fuses BBSIZ1K
+.................... 
 .................... 
 .................... #use standard_io(ALL)
 .................... 
@@ -1743,18 +1758,16 @@ CCS PCH C Compiler, Version 5.090, 49113               13-Jan-22 17:32
 .................... 
 .................... 
 .................... }
-09CC:  BRA    09CC
+09CC:  SLEEP 
 
 Configuration Fuses:
-   Word  1: 2200   HS NOPLLEN PCLKEN NOFCMEN NOIESO
-   Word  2: 0E19   NOPUT NOBROWNOUT BORV19 NOWDT WDT128
+   Word  1: 0800   INTRC_IO NOPLLEN NOPCLKEN NOFCMEN NOIESO
+   Word  2: 0F07   NOPUT BROWNOUT BORV30 WDT WDT128
    Word  3: 0000   NOHFOFST NOMCLR
-   Word  4: 0009   STVREN NOLVP BBSIZ2K NOXINST DEBUG
+   Word  4: 0081   STVREN NOLVP BBSIZ1K NOXINST NODEBUG
    Word  5: C003   NOPROTECT NOCPB NOCPD
    Word  6: E003   NOWRT NOWRTC NOWRTB NOWRTD
    Word  7: 4003   NOEBTR NOEBTRB
-
-   Some fuses have been forced to be compatible with the ICD debugger.
 
 ROM data:
 F00000: 00 00 40 00                                        ..@.
