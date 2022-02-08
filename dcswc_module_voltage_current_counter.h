@@ -20,7 +20,7 @@ to see if anything has been overriden!
 */
 
 #fuses NODEBUG 
-#fuses INTRC_IO
+#fuses HS
 #fuses NOPCLKEN
 #fuses NOPLLEN
 #fuses NOFCMEN

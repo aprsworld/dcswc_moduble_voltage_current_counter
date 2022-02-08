@@ -1,4 +1,4 @@
-CCS PCH C Compiler, Version 5.090, 49113               06-Feb-22 18:52
+CCS PCH C Compiler, Version 5.090, 49113               07-Feb-22 20:05
 
                Filename:   C:\Users\James Jarvis\Desktop\planetPrecision\dcswc_module_voltage_current_counter\dcswc_module_voltage_current_counter.lst
 
@@ -97,7 +97,7 @@ CCS PCH C Compiler, Version 5.090, 49113               06-Feb-22 18:52
 0480:  DATA 73,0D
 0482:  DATA 0A,23
 0484:  DATA 20,00
-0486:  DATA 36,2D
+0486:  DATA 37,2D
 0488:  DATA 46,65
 048A:  DATA 62,2D
 048C:  DATA 32,32
@@ -244,7 +244,7 @@ CCS PCH C Compiler, Version 5.090, 49113               06-Feb-22 18:52
 .................... */
 .................... 
 .................... #fuses NODEBUG 
-.................... #fuses INTRC_IO
+.................... #fuses HS
 .................... #fuses NOPCLKEN
 .................... #fuses NOPLLEN
 .................... #fuses NOFCMEN
@@ -1761,7 +1761,7 @@ CCS PCH C Compiler, Version 5.090, 49113               06-Feb-22 18:52
 09CC:  SLEEP 
 
 Configuration Fuses:
-   Word  1: 0800   INTRC_IO NOPLLEN NOPCLKEN NOFCMEN NOIESO
+   Word  1: 0200   HS NOPLLEN NOPCLKEN NOFCMEN NOIESO
    Word  2: 0F07   NOPUT BROWNOUT BORV30 WDT WDT128
    Word  3: 0000   NOHFOFST NOMCLR
    Word  4: 0081   STVREN NOLVP BBSIZ1K NOXINST NODEBUG
