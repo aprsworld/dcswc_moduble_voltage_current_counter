@@ -1,5 +1,6 @@
 #include "dcswc_module_voltage_current_counter.h"
 
+#define ADCRANGE 1
 
 typedef struct {
 	int32 vbus_a, vshunt_a;
@@ -75,6 +76,11 @@ void init(void) {
 	/* set I2C slave address, which is always an even number */
 	i2c_slaveaddr(0x36 + (read_dip_switch()<<1) );
 
+
+	/* initialize ina228 chips */
+	ina228_init(INA228_A_ADDR);
+	ina228_init(INA228_B_ADDR);
+
 }
 
 
@@ -82,14 +88,25 @@ void action_now_ina(void) {
 	timers.now_ina=0;
 
 	/* sample INA228 at middle of 1 second window */
-	next.vbus_a=ina228_read24(INA228_A_ADDR,INA228_REG_VBUS);
+	next.vbus_a  =ina228_read24(INA228_A_ADDR,INA228_REG_VBUS);
 	next.vshunt_a=ina228_read24(INA228_A_ADDR,INA228_REG_VSHUNT);
 
-	next.vbus_b=ina228_read24(INA228_B_ADDR,INA228_REG_VBUS);
+	next.vbus_b  =ina228_read24(INA228_B_ADDR,INA228_REG_VBUS);
 	next.vshunt_b=ina228_read24(INA228_B_ADDR,INA228_REG_VSHUNT);
 
 	next.dietemp_a=ina228_read16(INA228_A_ADDR,INA228_REG_DIETEMP);
 	next.dietemp_b=ina228_read16(INA228_B_ADDR,INA228_REG_DIETEMP);
+
+#if ADCRANGE == 1 
+	/* set low bit of high word (bit 24) to indicate we have +-40.96mV shunt range */
+	bit_set(next.vshunt_a,24);
+	bit_set(next.vshunt_b,24);
+#else
+	/* systems with +-163.84mV shunt range have bit 24 cleared. Or older firmwares don't implement this and that bit
+	will be 0 by default */
+	bit_clear(next.vshunt_a,24);
+	bit_clear(next.vshunt_b,24);
+#endif
 }
 
 

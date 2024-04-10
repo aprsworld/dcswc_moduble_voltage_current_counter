@@ -70,7 +70,7 @@ int16 map_i2c(int8 addr) {
 			return (int16) lsw;    
 
 		case I2C_REG_VBUS_B_MSW:
-			lsw = make16(make8(current.vbus_a,1),make8(current.vbus_a,0));
+			lsw = make16(make8(current.vbus_b,1),make8(current.vbus_b,0));
 			return (int16) make16(make8(current.vbus_b,3),make8(current.vbus_b,2));
 		case I2C_REG_VBUS_B_LSW:
 			return (int16) lsw;

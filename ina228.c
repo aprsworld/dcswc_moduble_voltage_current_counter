@@ -66,5 +66,33 @@ void ina228_write16(int8 i2c_address, int8 regaddr, int16 value) {
 }
 
 void ina228_init(int8 i2c_address) {
-	ina228_write16(i2c_address,INA228_REG_CONFIG,0b1000000000000000);
+	/* 
+	INA228_REG_CONFIG (from table 7-5 in INA228 datasheet
+		bit[15]            RST      (R/W) Reset bit
+		bit[14]            RSTACC   (R/W) Resets the contents of accumulation registers ENERGY and CHARGE to 0
+		bit[13] to bit[ 6] CONDLY   (R/W) Sets the Delay for initial ADC conversion in steps of 2 ms
+                                          0h = 0 s
+                                          1h = 2 ms
+                                          FFh = 510 ms
+		bit[ 5]            TEMPCOMP (R/W) Enables temperature compensation of an external shunt 
+		bit[ 4]            ADCRANGE (R/W) Shunt full scale range selection across IN+ and IN–
+                                          0h = ±163.84 mV
+                                          1h = ± 40.96 mV
+		bit[ 3] to bit[ 0] RESERVED (R)   Reserved. Always reads 0
+ 	*/
+
+	/* note that issuing a reset bit to INA228_REG_CONFIG will cause it to reset and apparently ignore the rest of the config */
+
+	/* no resets, no conversion delay, no shunt temperature compensation, +-40.96mV range */
+#if ADCRANGE == 1
+	ina228_write16(i2c_address,INA228_REG_CONFIG,0b0000000000010000);
+//                                                 5432109876543210
+//                                                 1     0
+#else
+	ina228_write16(i2c_address,INA228_REG_CONFIG,0x00);
+#endif
+
+	/* continuous measurements, longest conversion time for voltages, shortest for temperature, 128 averaging window */
+	ina228_write16(i2c_address,INA228_REG_ADC_CONFIG,0b1111111111000100);
+
 }
