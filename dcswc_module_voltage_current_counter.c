@@ -157,6 +157,8 @@ void main(void) {
 	}
 	fprintf(STREAM_FTDI,"\r\n");
 
+	restart_wdt();
+	fprintf(STREAM_FTDI,"# our I2C address=0x%02x\r\n",0x36 + (read_dip_switch()<<1));
 
 	timers.led_on_a=500;
 
