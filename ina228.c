@@ -94,5 +94,11 @@ void ina228_init(int8 i2c_address) {
 
 	/* continuous measurements, longest conversion time for voltages, shortest for temperature, 128 averaging window */
 	ina228_write16(i2c_address,INA228_REG_ADC_CONFIG,0b1111111111000100);
+//                                                     5432109876543210
+//                                                     1     0
+//	/* N experimentation */
+//	ina228_write16(i2c_address,INA228_REG_ADC_CONFIG,0b1111111111000000);
+//                                                     5432109876543210
+//                                                     1     0
 
 }

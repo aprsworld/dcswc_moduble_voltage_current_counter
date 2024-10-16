@@ -1,6 +1,6 @@
 #include "dcswc_module_voltage_current_counter.h"
 
-#define ADCRANGE 1
+#define ADCRANGE 0
 
 typedef struct {
 	int32 vbus_a, vshunt_a;
